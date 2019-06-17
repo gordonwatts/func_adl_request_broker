@@ -12,7 +12,6 @@ def process_message(db, ch, method, properties, body):
 
     # Get the AST out of the body of the message.
     a = pickle.loads(body)
-    print ("hi")
     if a is None or not isinstance(a, ast.AST):
         print (f"Body of message wasn't of type AST: {a}")
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -24,7 +23,7 @@ def process_message(db, ch, method, properties, body):
     # If we know nothing about this, then fire off a new task
     if status is None:
         # TODO: this needs to be atomic. Otherwise you have to clean up.
-        status = db.save_results(a, ADLRequestInfo(done=False, files=[], jobs=0, phase='waiting_for_data', hash=''))
+        status = db.save_results(a, ADLRequestInfo(done=False, files=[], jobs=-1, phase='waiting_for_data', hash=''))
         finder_message = {
             'hash': status.hash,
             'ast': base64.b64encode(pickle.dumps(a)).decode(),
@@ -42,8 +41,6 @@ def process_message(db, ch, method, properties, body):
 
 def listen_to_queue(rabbit_node:str, mongo_db_server:str):
     'Download and pass on datasets as we see them'
-
-    print ("hi from listen")
 
     # Save the connection to the mongo db.
     # TODO: What happens if the mongo db dies and comes back?
@@ -64,14 +61,12 @@ def listen_to_queue(rabbit_node:str, mongo_db_server:str):
     channel.basic_consume(queue='as_request', on_message_callback=lambda ch, method, properties, body: process_message(db, ch, method, properties, body), auto_ack=False)
 
     # We are setup. Off we go. We'll never come back.
-    print ("ready to process!")
     channel.start_consuming()
-    print ("done processing")
 
 
 if __name__ == '__main__':
     bad_args = len(sys.argv) != 3
     if bad_args:
-        print ("Usage: python download_did_rabbit.py <rabbit-mq-node-address> <mongo-db-server>")
+        print ("Usage: python request_ingester_rabbit.py <rabbit-mq-node-address> <mongo-db-server>")
     else:
         listen_to_queue (sys.argv[1], sys.argv[2])
