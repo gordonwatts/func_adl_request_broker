@@ -14,6 +14,7 @@ def process_add_file(db, ch, method, properties, body):
     if state is not None:
         new_files = list(state.files)
         new_files.append(file_ref)
+        new_files = list(set(new_files))
         new_done = len(new_files) >= state.jobs
         new_state = ADLRequestInfo(done=new_done, files=new_files, jobs=state.jobs, phase=state.phase, hash=state.hash if not new_done else 'done')
         db.save_results(hash, new_state)
