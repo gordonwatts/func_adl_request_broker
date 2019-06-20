@@ -5,6 +5,7 @@ import ast
 import base64
 import json
 import pika
+import os
 from func_adl_request_broker.db_access import FuncADLDBAccess, ADLRequestInfo
 
 def process_message(db, ch, method, properties, body):
@@ -39,7 +40,7 @@ def process_message(db, ch, method, properties, body):
     # Done!
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-def listen_to_queue(rabbit_node:str, mongo_db_server:str):
+def listen_to_queue(rabbit_node:str, mongo_db_server:str, rabbit_user:str, rabbit_pass:str):
     'Download and pass on datasets as we see them'
 
     # Save the connection to the mongo db.
@@ -48,7 +49,10 @@ def listen_to_queue(rabbit_node:str, mongo_db_server:str):
 
     # Connect and setup the queues we will listen to and push once we've done.
     # TODO: What happens if the rabbitmq guy dies and comes back?
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbit_node))
+    if rabbit_pass in os.environ:
+        rabbit_pass = os.environ[rabbit_pass]
+    credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbit_node, credentials=credentials))
     channel = connection.channel()
 
     # as_reqeusts - the queue where the initial requests come in on.
@@ -65,8 +69,8 @@ def listen_to_queue(rabbit_node:str, mongo_db_server:str):
 
 
 if __name__ == '__main__':
-    bad_args = len(sys.argv) != 3
+    bad_args = len(sys.argv) != 5
     if bad_args:
-        print ("Usage: python request_ingester_rabbit.py <rabbit-mq-node-address> <mongo-db-server>")
+        print ("Usage: python request_ingester_rabbit.py <rabbit-mq-node-address> <mongo-db-server> <rabbit-username> <rabbit-password>")
     else:
-        listen_to_queue (sys.argv[1], sys.argv[2])
+        listen_to_queue (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

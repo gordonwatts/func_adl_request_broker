@@ -2,6 +2,7 @@
 import pika
 import json
 import sys
+import os
 from func_adl_request_broker.db_access import FuncADLDBAccess, ADLRequestInfo
 
 def process_add_file(db, ch, method, properties, body):
@@ -53,8 +54,11 @@ def process_number_jobs(db, ch, method, properties, body):
 
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-def listen_to_queue(rabbit_node, mongo_db_server):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbit_node))
+def listen_to_queue(rabbit_node, mongo_db_server, rabbit_user, rabbit_pass):
+    if rabbit_pass in os.environ:
+        rabbit_pass = os.environ[rabbit_pass]
+    credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host=rabbit_node, credentials=credentials))
     channel = connection.channel()
 
     # Open up the mongo db which we will be doing lots of updates to.
@@ -78,8 +82,8 @@ def listen_to_queue(rabbit_node, mongo_db_server):
     channel.start_consuming()
 
 if __name__ == '__main__':
-    bad_args = len(sys.argv) != 3
+    bad_args = len(sys.argv) != 5
     if bad_args:
-        print ("Usage: python state_updater.py <rabbit-mq-node-address> <mongo-db-server>")
+        print ("Usage: python state_updater.py <rabbit-mq-node-address> <mongo-db-server> <rabbit-user> <rabbit-pass>")
     else:
-        listen_to_queue (sys.argv[1], sys.argv[2])
+        listen_to_queue (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
