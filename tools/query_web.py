@@ -8,6 +8,7 @@ import pickle
 import ast
 import pika
 import os
+import json
 import uuid
 
 def on_response (status, corr_id, ch, method, props, body):
@@ -73,4 +74,10 @@ def query(body):
 
     channel.close()
 
-    return status[0]
+    # Rewrite the files.
+    result = json.loads(status[0])
+    if 'FILE_URL' in os.environ:
+        prefix = os.environ['FILE_URL']
+        result['files'] = [f'{prefix}{u}' for u in result['files']]
+
+    return result
