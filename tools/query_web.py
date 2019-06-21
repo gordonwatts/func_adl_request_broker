@@ -78,6 +78,6 @@ def query(body):
     result = json.loads(status[0])
     if 'FILE_URL' in os.environ:
         prefix = os.environ['FILE_URL']
-        result['files'] = [f'{prefix}{u}' for u in result['files']]
+        result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
 
     return result

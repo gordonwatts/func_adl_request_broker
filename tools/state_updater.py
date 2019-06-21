@@ -9,12 +9,13 @@ def process_add_file(db, ch, method, properties, body):
     info = json.loads(body)
     hash = info['hash']
     file_ref = info['file']
+    treename = info['treename']
 
     # Update state. Just silently ignore if this thing isn't there.
     state = db.lookup_results(hash)
     if state is not None:
         new_files = list(state.files)
-        new_files.append(file_ref)
+        new_files.append((file_ref, treename))
         new_files = list(set(new_files))
         new_done = len(new_files) >= state.jobs
         new_state = ADLRequestInfo(done=new_done, files=new_files, jobs=state.jobs, phase=state.phase, hash=state.hash if not new_done else 'done')
