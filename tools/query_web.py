@@ -16,31 +16,8 @@ def on_response (status, corr_id, ch, method, props, body):
     if corr_id == props.correlation_id:
         status.append(body)
 
-@hug.post('/query')
-def query(body):
-    r'''
-    Given a query (a pickled ast file), return the files or status.
-    WARNING: Python AST's are a known security issue and should not be used.
-
-    Arguments:
-        body                The Pickle of the python AST representing the request
-
-    Returns:
-        Results of the run
-    '''
-    # If they are sending something too big, then we are just going to bail out of this now.
-    if body.stream_len > 1024*1000*100:
-        raise BaseException("Too big an AST to process!")
-
-    # Read the AST in from the incoming data.
-    raw_data = body.stream.read(body.stream_len)
-    a = pickle.loads(raw_data)
-    if a is None or not isinstance(a, ast.AST):
-        raise BaseException(f'Incoming AST is not the proper type: {type(a)}.')
-
-    # Now, send it into the system, and wait for a response that tells us what to do with this. This is a little messy since
-    # we have to correlate a return items.
-
+def do_rpc_call(a: ast.AST):
+    'Make the RPC call and return the value'
     # Open connection to Rabbit, and declare the main queue we will be sending to.
     rabbit_user = os.environ['RABBIT_USER']
     rabbit_pass = os.environ['RABBIT_PASS']
@@ -74,8 +51,35 @@ def query(body):
 
     channel.close()
 
+    return json.loads(status[0])
+
+@hug.post('/query')
+def query(body):
+    r'''
+    Given a query (a pickled ast file), return the files or status.
+    WARNING: Python AST's are a known security issue and should not be used.
+
+    Arguments:
+        body                The Pickle of the python AST representing the request
+
+    Returns:
+        Results of the run
+    '''
+    # If they are sending something too big, then we are just going to bail out of this now.
+    if body.stream_len > 1024*1000*100:
+        raise BaseException("Too big an AST to process!")
+
+    # Read the AST in from the incoming data.
+    raw_data = body.stream.read(body.stream_len)
+    a = pickle.loads(raw_data)
+    if a is None or not isinstance(a, ast.AST):
+        raise BaseException(f'Incoming AST is not the proper type: {type(a)}.')
+
+    # Now, send it into the system, and wait for a response that tells us what to do with this. This is a little messy since
+    # we have to correlate a return items.
+    result = do_rpc_call(a)
+
     # Rewrite the files.
-    result = json.loads(status[0])
     if 'FILE_URL' in os.environ:
         prefix = os.environ['FILE_URL']
         result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]

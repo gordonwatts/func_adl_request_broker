@@ -1,3 +1,15 @@
 {
-    "docker.imageBuildContextPath": "."
+    "docker.imageBuildContextPath": ".",
+    "cSpell.words": [
+        "DAOD",
+        "EXOT",
+        "NNPDF",
+        "ROOTT",
+        "Topo",
+        "fspec",
+        "ltlow",
+        "pytest",
+        "r'localds",
+        "tname"
+    ]
 }
