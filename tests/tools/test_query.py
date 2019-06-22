@@ -123,3 +123,13 @@ def test_local_files(good_query_ast_body, mock_good_rabbit_call, with_local_pref
     fspec, tname = fd[0]
     assert fspec == 'G:\\file.root'
     assert tname == 'dudetree3'
+
+def test_local_files_with_prefix(good_query_ast_body, mock_good_rabbit_call, with_local_prefix, with_prefix_env):
+    a = query(good_query_ast_body)
+    assert 'localfiles' in a
+    fd = a['localfiles']
+    assert len(fd) == 1
+    assert len(fd[0]) == 2
+    fspec, tname = fd[0]
+    assert fspec == 'G:\\file.root'
+    assert tname == 'dudetree3'

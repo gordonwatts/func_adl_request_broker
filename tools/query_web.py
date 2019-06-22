@@ -87,12 +87,13 @@ def query(body):
     result = do_rpc_call(a)
 
     # Rewrite the files.
-    if 'FILE_URL' in os.environ:
-        prefix = os.environ['FILE_URL']
-        result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
-
     if 'LOCAL_FILE_URL' in os.environ:
         prefix = os.environ['LOCAL_FILE_URL']
         result['localfiles'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
+
+    if 'FILE_URL' in os.environ:
+        # Do this last b.c. it rewrites the files guy.
+        prefix = os.environ['FILE_URL']
+        result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
 
     return result
