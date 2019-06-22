@@ -70,6 +70,12 @@ def with_prefix_env():
     yield 'ok'
     del os.environ['FILE_URL']
 
+@pytest.fixture
+def with_local_prefix():
+    os.environ['LOCAL_FILE_URL'] = 'G:\\'
+    yield 'ok'
+    del os.environ['LOCAL_FILE_URL']
+
 def test_good_call_no_prefix(good_query_ast_body, mock_good_rabbit_call, no_prefix_env):
     a = query(good_query_ast_body)
     assert a is not None
@@ -107,3 +113,13 @@ def test_random_ast(query_random_body):
     except BadASTException:
         return
     assert False
+
+def test_local_files(good_query_ast_body, mock_good_rabbit_call, with_local_prefix):
+    a = query(good_query_ast_body)
+    assert 'localfiles' in a
+    fd = a['localfiles']
+    assert len(fd) == 1
+    assert len(fd[0]) == 2
+    fspec, tname = fd[0]
+    assert fspec == 'G:\\file.root'
+    assert tname == 'dudetree3'

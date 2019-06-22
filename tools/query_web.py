@@ -91,4 +91,8 @@ def query(body):
         prefix = os.environ['FILE_URL']
         result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
 
+    if 'LOCAL_FILE_URL' in os.environ:
+        prefix = os.environ['LOCAL_FILE_URL']
+        result['localfiles'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
+
     return result
