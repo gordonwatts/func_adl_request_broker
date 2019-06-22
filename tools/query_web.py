@@ -10,6 +10,11 @@ import pika
 import os
 import json
 import uuid
+from adl_func_client.query_result_asts import ResultTTree
+
+class BadASTException(BaseException):
+    def __init__(self, message):
+        BaseException.__init__(self, message)
 
 def on_response (status, corr_id, ch, method, props, body):
     'We get the info back - print it out'
@@ -73,7 +78,9 @@ def query(body):
     raw_data = body.stream.read(body.stream_len)
     a = pickle.loads(raw_data)
     if a is None or not isinstance(a, ast.AST):
-        raise BaseException(f'Incoming AST is not the proper type: {type(a)}.')
+        raise BadASTException(f'Incoming AST is not the proper type: {type(a)}.')
+    if not isinstance(a, ResultTTree):
+        raise BadASTException(f'The AST must end with a ResultTTree - that is all this server can resolve, not {a}')
 
     # Now, send it into the system, and wait for a response that tells us what to do with this. This is a little messy since
     # we have to correlate a return items.

@@ -6,6 +6,7 @@
         "NNPDF",
         "ROOTT",
         "Topo",
+        "asts",
         "fspec",
         "ltlow",
         "pytest",
