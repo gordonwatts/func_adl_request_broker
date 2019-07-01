@@ -99,6 +99,8 @@ def query(body):
 
     return result
 
+# Pay attention to the signal docker and kubectl will send us
+# so we can shut down fast.
 def do_shutdown(signum, frame):
     exit(1)
 
