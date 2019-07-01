@@ -14,4 +14,8 @@ RUN pip3 install *.whl
 COPY func_adl_request_broker/ ./func_adl_request_broker
 COPY tools/ .
 
+# Turn this on so that stdout isn't buffered - otherwise logs in kubectl don't
+# show up until much later!
+ENV PYTHONUNBUFFERED=1
+
 CMD ["/bin/bash"]
