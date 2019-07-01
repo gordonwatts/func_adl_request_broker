@@ -29,7 +29,10 @@ def process_message(db, ch, method, properties, body):
             'hash': status.hash,
             'ast': base64.b64encode(pickle.dumps(a)).decode(),
         }
+        print (f'Running new request: {status.hash}')
         ch.basic_publish(exchange='', routing_key='find_did', body=json.dumps(finder_message))
+    else:
+        print (f'Request already running: {status.hash} Phase: {status.phase} Files: {status.files}')
 
     # Next, we have to let everyone know the thing is off and going (or done, or whatever).
     ch.basic_publish(exchange='',
@@ -73,4 +76,5 @@ if __name__ == '__main__':
     if bad_args:
         print ("Usage: python request_ingester_rabbit.py <rabbit-mq-node-address> <mongo-db-server> <rabbit-username> <rabbit-password>")
     else:
+        print ("Starting up ingester...")
         listen_to_queue (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
