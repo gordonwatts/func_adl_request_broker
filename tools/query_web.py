@@ -11,6 +11,7 @@ import os
 import json
 import uuid
 from adl_func_client.query_result_asts import ResultTTree
+import signal
 
 class BadASTException(BaseException):
     def __init__(self, message):
@@ -97,3 +98,8 @@ def query(body):
         result['files'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
 
     return result
+
+def do_shutdown(signum, frame):
+    exit(1)
+
+signal.signal(signal.SIGTERM, do_shutdown)
