@@ -23,7 +23,6 @@ def process_message(db, ch, method, properties, body):
     
     # If we know nothing about this, then fire off a new task
     if status is None:
-        # TODO: this needs to be atomic. Otherwise you have to clean up.
         status = db.save_results(a, ADLRequestInfo(done=False, files=[], jobs=-1, phase='waiting_for_data', hash=''))
         finder_message = {
             'hash': status.hash,
@@ -47,11 +46,9 @@ def listen_to_queue(rabbit_node:str, mongo_db_server:str, rabbit_user:str, rabbi
     'Download and pass on datasets as we see them'
 
     # Save the connection to the mongo db.
-    # TODO: What happens if the mongo db dies and comes back?
     db = FuncADLDBAccess(mongo_db_server)
 
     # Connect and setup the queues we will listen to and push once we've done.
-    # TODO: What happens if the rabbitmq guy dies and comes back?
     if rabbit_pass in os.environ:
         rabbit_pass = os.environ[rabbit_pass]
     credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)

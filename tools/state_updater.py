@@ -65,8 +65,6 @@ def listen_to_queue(rabbit_node, mongo_db_server, rabbit_user, rabbit_pass):
     # Open up the mongo db which we will be doing lots of updates to.
     db = FuncADLDBAccess(mongo_db_server)
 
-    # TODO: these should not be processed at the same time... this should be serial, both queues,
-    # to prevent a race condition.
     # status_add_file - sent when a file is done and ready for someone downstream to use
     channel.queue_declare(queue='status_add_file')
     channel.basic_consume(queue='status_add_file', on_message_callback=lambda ch, method, properties, body: process_add_file(db, ch, method, properties, body), auto_ack=False)
