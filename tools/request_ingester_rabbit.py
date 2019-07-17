@@ -7,6 +7,7 @@ import json
 import pika
 import os
 from func_adl_request_broker.db_access import FuncADLDBAccess, ADLRequestInfo
+import logging
 
 def process_message(db, ch, method, properties, body):
     'Process the incoming message'
@@ -14,7 +15,7 @@ def process_message(db, ch, method, properties, body):
     # Get the AST out of the body of the message.
     a = pickle.loads(body)
     if a is None or not isinstance(a, ast.AST):
-        print (f"Body of message wasn't of type AST: {a}")
+        logging.warning (f"Body of message wasn't of type AST: {a}")
         ch.basic_ack(delivery_tag=method.delivery_tag)
         return
 
@@ -28,10 +29,10 @@ def process_message(db, ch, method, properties, body):
             'hash': status.hash,
             'ast': base64.b64encode(pickle.dumps(a)).decode(),
         }
-        print (f'Running new request: {status.hash}')
+        logging.info (f'Running new request: {status.hash}')
         ch.basic_publish(exchange='', routing_key='find_did', body=json.dumps(finder_message))
     else:
-        print (f'Request already running: {status.hash} Phase: {status.phase} Files: {status.files}')
+        logging.info (f'Request already running: {status.hash} Phase: {status.phase} Files: {status.files}')
 
     # Next, we have to let everyone know the thing is off and going (or done, or whatever).
     ch.basic_publish(exchange='',
@@ -69,9 +70,10 @@ def listen_to_queue(rabbit_node:str, mongo_db_server:str, rabbit_user:str, rabbi
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     bad_args = len(sys.argv) != 5
     if bad_args:
         print ("Usage: python request_ingester_rabbit.py <rabbit-mq-node-address> <mongo-db-server> <rabbit-username> <rabbit-password>")
     else:
-        print ("Starting up ingester...")
+        logging.info ("Starting up ingester...")
         listen_to_queue (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

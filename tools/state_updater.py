@@ -4,6 +4,7 @@ import json
 import sys
 import os
 from func_adl_request_broker.db_access import FuncADLDBAccess, ADLRequestInfo
+import logging
 
 def process_add_file(db, ch, method, properties, body):
     info = json.loads(body)
@@ -81,6 +82,7 @@ def listen_to_queue(rabbit_node, mongo_db_server, rabbit_user, rabbit_pass):
     channel.start_consuming()
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     bad_args = len(sys.argv) != 5
     if bad_args:
         print ("Usage: python state_updater.py <rabbit-mq-node-address> <mongo-db-server> <rabbit-user> <rabbit-pass>")

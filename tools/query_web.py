@@ -12,6 +12,9 @@ import json
 import uuid
 from adl_func_client.query_result_asts import ResultTTree
 import signal
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 class BadASTException(BaseException):
     def __init__(self, message):
@@ -42,6 +45,7 @@ def do_rpc_call(a: ast.AST):
     channel.basic_consume(queue=callback_queue, on_message_callback=lambda ch, method, props, body: on_response(status, corr_id, ch, method, props, body), auto_ack=True)
 
     # Now, send the message
+    logging.info("Sending a request")
     channel.basic_publish(exchange='',
         routing_key='as_request',
         properties=pika.BasicProperties(
@@ -52,8 +56,10 @@ def do_rpc_call(a: ast.AST):
     )
 
     # Wait for a response
+    logging.info("Waiting for reply back from ingester")
     while len(status) == 0:
         channel.connection.process_data_events()
+    logging.info("Got response!")
 
     channel.close()
 
