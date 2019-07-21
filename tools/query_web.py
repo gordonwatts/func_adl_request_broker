@@ -98,6 +98,10 @@ def query(body):
         prefix = os.environ['LOCAL_FILE_URL']
         result['localfiles'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
 
+    if 'HTTP_PREFIX' in os.environ:
+        prefix = os.environ['HTTP_PREFIX']
+        result['httpfiles'] = [[f'{prefix}{u}', tn] for u,tn in result['files']]
+
     if 'FILE_URL' in os.environ:
         # Do this last b.c. it rewrites the files guy.
         prefix = os.environ['FILE_URL']
