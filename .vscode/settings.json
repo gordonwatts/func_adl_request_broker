@@ -1,6 +1,7 @@
 {
     "docker.imageBuildContextPath": ".",
     "cSpell.words": [
+        "ADLDB",
         "DAOD",
         "EXOT",
         "NNPDF",
@@ -9,6 +10,7 @@
         "asts",
         "fspec",
         "ltlow",
+        "pymongo",
         "pytest",
         "r'localds",
         "tname"
