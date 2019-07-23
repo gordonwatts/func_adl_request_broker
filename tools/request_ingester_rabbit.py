@@ -24,7 +24,7 @@ def process_message(db, ch, method, properties, body):
     
     # If we know nothing about this, then fire off a new task
     if status is None:
-        status = db.save_results(a, ADLRequestInfo(done=False, files=[], jobs=-1, phase='waiting_for_data', hash=''))
+        status = db.save_results(a, ADLRequestInfo(done=False, files=[], jobs=-1, phase='waiting_for_data', hash='', log=None, message=None))
         finder_message = {
             'hash': status.hash,
             'ast': base64.b64encode(pickle.dumps(a)).decode(),
@@ -38,7 +38,7 @@ def process_message(db, ch, method, properties, body):
     ch.basic_publish(exchange='',
         routing_key=properties.reply_to,
         properties=pika.BasicProperties(correlation_id = properties.correlation_id),
-        body=json.dumps({'files': status.files, 'phase': status.phase, 'done': status.done, 'jobs': status.jobs}))
+        body=json.dumps({'files': status.files, 'phase': status.phase, 'done': status.done, 'jobs': status.jobs, 'log': status.log, 'message': status.message}))
     
     # Done!
     ch.basic_ack(delivery_tag=method.delivery_tag)

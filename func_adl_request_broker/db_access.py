@@ -5,7 +5,7 @@ from typing import Optional, Union
 import pymongo
 from adl_func_backend.ast.ast_hash import calc_ast_hash
 
-ADLRequestInfo = namedtuple('ADLRequestInfo', 'done files jobs phase hash')
+ADLRequestInfo = namedtuple('ADLRequestInfo', 'done files jobs phase hash message log')
 
 def hash_from_arg (arg:Union[ast.AST, str]):
     'Return the hash from the arg. If it is a string, then it is the hash. Otherwise it is an ast to be hashed.'
@@ -14,7 +14,13 @@ def hash_from_arg (arg:Union[ast.AST, str]):
     return calc_ast_hash(arg)    
 
 def obj_from_dict (r:dict) -> ADLRequestInfo:
-    return ADLRequestInfo(done=r['done'], files=r['files'], jobs=r['jobs'], phase=r['phase'], hash=r['hash'])
+    return ADLRequestInfo(done=r['done'],
+                files=r['files'],
+                jobs=r['jobs'],
+                phase=r['phase'],
+                hash=r['hash'],
+                message=r['message'] if 'message' in r else None,
+                log=r['log'] if 'log' in r else None)
 
 class FuncADLDBAccess:
     def __init__ (self, db_server):
@@ -54,6 +60,10 @@ class FuncADLDBAccess:
             'phase': results.phase,
             'hash': hash
         }
+        if results.log:
+            d['log'] = results.log
+        if results.message:
+            d['message'] = results.message
 
         self._query_collection.update({'hash': hash}, d, upsert=True)
         return obj_from_dict(d)

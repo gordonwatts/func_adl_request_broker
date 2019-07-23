@@ -19,7 +19,7 @@ def process_add_file(db, ch, method, properties, body):
         new_files.append((file_ref, treename))
         new_files = list(set(new_files))
         new_done = len(new_files) >= state.jobs
-        new_state = ADLRequestInfo(done=new_done, files=new_files, jobs=state.jobs, phase=state.phase, hash=state.hash if not new_done else 'done')
+        new_state = ADLRequestInfo(done=new_done, files=new_files, jobs=state.jobs, phase=state.phase, hash=state.hash if not new_done else 'done', log=state.log, message=state.message)
         db.save_results(hash, new_state)
     else:
         print(f'Unable to find an entry for hash {hash}. Ignoring adding file {file_ref}.')
@@ -34,7 +34,23 @@ def process_update_state(db, ch, method, properties, body):
     # Update state. Just silently ignore if this thing isn't there.
     state = db.lookup_results(hash)
     if state is not None:
-        new_state = ADLRequestInfo(done=state.done, files=state.files, jobs=state.jobs, phase=new_phase, hash=state.hash)
+        new_state = ADLRequestInfo(done=state.done, files=state.files, jobs=state.jobs, phase=new_phase, hash=state.hash, log=state.log, message=state.message)
+        db.save_results(hash, new_state)
+    else:
+        print(f'Unable to find an entry for hash {hash} to update it to state {new_phase}.')
+
+    ch.basic_ack(delivery_tag=method.delivery_tag)
+
+def process_crashed(db, ch, method, properties, body):
+    info = json.loads(body)
+    hash = info['hash']
+    message = info['message']
+    log = info['log']
+
+    # Update state. Just silently ignore if this thing isn't there.
+    state = db.lookup_results(hash)
+    if state is not None:
+        new_state = ADLRequestInfo(done=True, files=state.files, jobs=state.jobs, phase=state.phase, hash=state.hash, log=log, message=message)
         db.save_results(hash, new_state)
     else:
         print(f'Unable to find an entry for hash {hash} to update it to state {new_phase}.')
@@ -49,7 +65,7 @@ def process_number_jobs(db, ch, method, properties, body):
     # Update state. Just silently ignore if this thing isn't there.
     state = db.lookup_results(hash)
     if state is not None:
-        new_state = ADLRequestInfo(done=state.done, files=state.files, jobs=new_n_jobs, phase=state.phase, hash=state.hash)
+        new_state = ADLRequestInfo(done=state.done, files=state.files, jobs=new_n_jobs, phase=state.phase, hash=state.hash, log=state.log, message=state.message)
         db.save_results(hash, new_state)
     else:
         print(f'Unable to find an entry for hash {hash} to update it to state {new_phase}.')
@@ -77,6 +93,10 @@ def listen_to_queue(rabbit_node, mongo_db_server, rabbit_user, rabbit_pass):
     # status_n_jobs - The total number of jobs that are running to deal with this request needs to be updated.
     channel.queue_declare(queue='status_number_jobs')
     channel.basic_consume(queue='status_number_jobs', on_message_callback=lambda ch, method, properties, body: process_number_jobs(db, ch, method, properties, body), auto_ack=False)
+
+    # crashed_request - where things go that totally bomb out.
+    channel.queue_declare(queue='crashed_request')
+    channel.basic_consume(queue='crashed_request', on_message_callback=lambda ch, method, properties, body: process_crashed(db, ch, method, properties, body), auto_ack=False)
 
     # We are setup. Off we go. We'll never come back.
     channel.start_consuming()
