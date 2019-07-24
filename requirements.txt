@@ -2,4 +2,4 @@ pika>1.0
 pymongo>=3.8
 hug>=2.4.8
 gunicorn>=19.0.0
-https://github.com/gordonwatts/functional_adl/releases/download/1.0.0-alpha.3/functional_adl-1.0.0a3-py3-none-any.whl
+https://github.com/gordonwatts/functional_adl/releases/download/1.0.0-alpha.6/functional_adl-1.0.0a6-py3-none-any.whl
