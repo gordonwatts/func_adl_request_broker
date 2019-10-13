@@ -10,7 +10,7 @@ import pika
 import os
 import json
 import uuid
-from adl_func_client.query_result_asts import ResultTTree
+from func_adl import ResultTTree
 import signal
 import logging
 logging.basicConfig(level=logging.INFO)

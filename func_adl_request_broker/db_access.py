@@ -3,7 +3,7 @@ import ast
 from collections import namedtuple
 from typing import Optional, Union
 import pymongo
-from adl_func_backend.ast.ast_hash import calc_ast_hash
+from func_adl.xAOD.backend.ast.ast_hash import calc_ast_hash
 
 ADLRequestInfo = namedtuple('ADLRequestInfo', 'done files jobs phase hash message log')
 

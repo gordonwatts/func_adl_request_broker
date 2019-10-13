@@ -7,8 +7,7 @@ import pickle
 import io
 import ast
 import os
-
-from adl_func_client.event_dataset import EventDataset
+from func_adl import EventDataset
 
 @pytest.fixture
 def good_query_ast_pickle_data():
